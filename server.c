@@ -82,7 +82,7 @@ int main() {
             }
         }
         if (wasSigHup) {
-                printf("Received SIGHUP signal. Exiting.\n");
+                printf("Received SIGHUP signal. \n");
                 wasSigHup = 0;
             	activeClients++;
 	            continue;
