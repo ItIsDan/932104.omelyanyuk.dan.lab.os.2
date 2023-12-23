@@ -118,8 +118,6 @@ int main() {
     char* fromServer = "Received!";
     send(clientSocket, fromServer, strlen(fromServer), 0);
     
-    close(clientSocket);
-    
     }
 
     close(serverSocket);

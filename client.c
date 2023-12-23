@@ -54,7 +54,7 @@ int main() {
     printf("%s\n", received);
     
     // Закрытие соединения
-  //  close(clientSocket);
+    close(clientSocket);
     
     return 0;
 }
