@@ -8,9 +8,6 @@
 #include <errno.h>
 #include <string.h>
 
-#define MAX_CLIENTS 5
-#define PORT 8080
-
 volatile sig_atomic_t wasSigHup = 0;
 
 void sigHupHandler(int sigNumber) {
@@ -33,7 +30,7 @@ int main() {
     // Инициализация структуры адреса сервера
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_addr.s_addr = INADDR_ANY;
-    serverAddr.sin_port = htons(PORT); 
+    serverAddr.sin_port = htons(8080); 
 
     // Привязка сокета к адресу и порту
     if (bind(serverSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
@@ -48,7 +45,7 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    printf("Server started on port %d \n", PORT);
+    printf("Server started on port %d \n", 8080);
 
     // Регистрация обработчика сигнала
     struct sigaction sa;
@@ -83,7 +80,7 @@ int main() {
 	            	continue;
                 }
 			 } else {
-                perror("Error in pselect");
+                perror("Error in pselect\n");
                 exit(EXIT_FAILURE); 
             }
         }
@@ -95,17 +92,20 @@ int main() {
                 perror("Error accepting connection");
                 exit(EXIT_FAILURE);
             }
-            char buffer[1024] = { 0 };
-	    int readBuffer = read(clientSocket, buffer, sizeof(buffer));
-	    if (readBuffer > 0) 
+            activeClients++;
+			char buffer[1024] = { 0 };
+			int readBuffer = read(clientSocket, buffer, sizeof(buffer));
+	    	if (readBuffer > 0) 
                 printf("Received text [ %s ] from user %d\n", buffer, activeClients + 1); 
-       	    else {
-       	        if (readBuffer == 0) 
-                    close(serverSocket); 
-                else  
-            	    perror("Read Error");  
-            } 
-            activeClients++;       
+       	    	else {
+       	        	if (readBuffer == 0) {
+                    	printf("Empty buffer");
+						close(serverSocket);
+					}
+                	else  
+            	    	perror("Read Error");  
+            	}	 
+                   
       }
 
       // Добавление нового клиента в множество файловых дескрипторов
@@ -114,9 +114,6 @@ int main() {
       // Обновление максимального значения дескриптора
       if (clientSocket > maxFd) 
           maxFd = clientSocket;          
-    
-    char* fromServer = "Received!";
-    send(clientSocket, fromServer, strlen(fromServer), 0);
     
     }
 

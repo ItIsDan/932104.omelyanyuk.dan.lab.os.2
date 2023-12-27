@@ -46,12 +46,9 @@ int main() {
         perror("\nError sending data\n");
         close(clientSocket);
         exit(EXIT_FAILURE);
-    } else 
+    } else {	
     	printf("Message sent\n");
-    
-    char received[1024] = { 0 };
-    int fromServer = read(clientSocket, received, sizeof(received)); 
-    printf("%s\n", received);
+	}
     
     // Закрытие соединения
     close(clientSocket);
