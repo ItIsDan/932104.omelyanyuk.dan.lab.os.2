@@ -9,6 +9,7 @@
 #include <string.h>
 
 #define MAX_CLIENTS 5
+#define PORT 8080
 
 volatile sig_atomic_t wasSigHup = 0;
 
@@ -22,8 +23,6 @@ int main() {
     struct sockaddr_in serverAddr, clientAddr;
     socklen_t clientLen = sizeof(clientAddr);
 
-    int i;
-
     // Создание сокета
     serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (serverSocket < 0) {
@@ -34,7 +33,7 @@ int main() {
     // Инициализация структуры адреса сервера
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_addr.s_addr = INADDR_ANY;
-    serverAddr.sin_port = htons(8080); 
+    serverAddr.sin_port = htons(PORT); 
 
     // Привязка сокета к адресу и порту
     if (bind(serverSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
@@ -49,7 +48,7 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    printf("Server started on port %d \n", 8080);
+    printf("Server started on port %d \n", PORT);
 
     // Регистрация обработчика сигнала
     struct sigaction sa;
@@ -75,18 +74,19 @@ int main() {
 
         fd_set tmpFds = fds; 
 
-        if (pselect(maxFd + 1, &tmpFds, NULL, NULL, NULL, &origMask) < 0) {
-            if (errno != EINTR) { 
+        if (pselect(maxFd + 1, &tmpFds, NULL, NULL, NULL, &origMask) == -1) {
+            if (errno == EINTR) {
+				if (wasSigHup) {
+                	printf("Received SIGHUP signal. \n");
+                	wasSigHup = 0;
+            		activeClients++;
+	            	continue;
+                }
+			 } else {
                 perror("Error in pselect");
                 exit(EXIT_FAILURE); 
             }
         }
-        if (wasSigHup) {
-                printf("Received SIGHUP signal. \n");
-                wasSigHup = 0;
-            	activeClients++;
-	            continue;
-                }
 
         // Проверка активности на серверном сокете
         if (FD_ISSET(serverSocket, &tmpFds)) {
